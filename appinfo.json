@@ -12,13 +12,18 @@
             {
                 "file": "fonts/Monaco.ttf",
                 "name": "FONT_MONACO_16",
-                "targetPlatforms": null,
+                "targetPlatforms": [
+                    "chalk"
+                ],
                 "type": "font"
             },
             {
-                "file": "fonts/digital-graphics-labs_bitwise.ttf",
-                "name": "FONT_BITWISE_15",
-                "targetPlatforms": null,
+                "file": "fonts/Monaco.ttf",
+                "name": "FONT_MONACO_14",
+                "targetPlatforms": [
+                    "aplite",
+                    "basalt"
+                ],
                 "type": "font"
             }
         ]
