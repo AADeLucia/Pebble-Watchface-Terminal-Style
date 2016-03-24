@@ -1,0 +1,38 @@
+{
+    "appKeys": {},
+    "capabilities": [
+        ""
+    ],
+    "companyName": "alexir563@aol.com",
+    "enableMultiJS": true,
+    "longName": "Geek Chic Watchface",
+    "projectType": "native",
+    "resources": {
+        "media": [
+            {
+                "file": "fonts/Monaco.ttf",
+                "name": "FONT_MONACO_16",
+                "targetPlatforms": null,
+                "type": "font"
+            },
+            {
+                "file": "fonts/digital-graphics-labs_bitwise.ttf",
+                "name": "FONT_BITWISE_15",
+                "targetPlatforms": null,
+                "type": "font"
+            }
+        ]
+    },
+    "sdkVersion": "3",
+    "shortName": "Geek Chic",
+    "targetPlatforms": [
+        "aplite",
+        "basalt",
+        "chalk"
+    ],
+    "uuid": "74c68c43-1a3d-40b8-9a1f-3acc4824e63a",
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": true
+    }
+}
