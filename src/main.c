@@ -15,7 +15,7 @@ static void handle_battery(BatteryChargeState charge_state) {
 		snprintf(battery_text, sizeof(battery_text), "%d%%", charge_state.charge_percent);
 	}
 	
-	static char s_buffer[31];
+	static char s_buffer[35];
 	snprintf(s_buffer, sizeof(s_buffer), "root@PC:/$ info\nbattery:   %s", battery_text);
 	
 	text_layer_set_text(s_battery_layer, s_buffer);
