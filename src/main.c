@@ -5,6 +5,8 @@ static GFont s_font;
 static TextLayer *s_time_layer;
 static TextLayer *s_battery_layer;
 static TextLayer *s_connection_layer;
+static GBitmap *s_bitmap;
+static BitmapLayer *s_bitmap_layer;
 
 /***Handle Battery***/
 static void handle_battery(BatteryChargeState charge_state) {
@@ -34,8 +36,9 @@ static void update_time() {
 	
 	//Write current hours and minutes into a buffer
 	//Desired style: "Thu Mar 24 01:46"
-	static char time_text[] = "day mon dd hh:mm";
-	strftime(time_text, sizeof(time_text), clock_is_24h_style() ? "%a %b %e %R" : "%a %b %e %I:%M", tick_time);
+	static char time_text[] = "day mon dd hh:mm EST YYYY";
+	strftime(time_text, sizeof(time_text), clock_is_24h_style() ?
+					 "%a %b %e %R" : "%a %b %e %I:%M", tick_time);
 	
 	//Display time on the TextLayer
 	static char s_buffer[50];
@@ -53,40 +56,39 @@ static void main_window_load(Window *window) {
 	Layer *window_layer = window_get_root_layer(window);
 	GRect bounds = layer_get_bounds(window_layer);
 	
-	//Create Platform-specific TextLayers and GFont
-	#if defined(PBL_RECT)
-		s_time_layer = text_layer_create(GRect(5, 40, bounds.size.w, 40));
-		s_battery_layer = text_layer_create(GRect(5, 80, bounds.size.w, 50));
-		s_connection_layer = text_layer_create(GRect(5, 110, bounds.size.w, 20));
-		s_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_MONACO_14));
-	#elif defined(PBL_ROUND)
-		s_time_layer = text_layer_create(GRect(10, 40, bounds.size.w, 35));
-		s_battery_layer = text_layer_create(GRect(10, 80, bounds.size.w, 40));
-		s_connection_layer = text_layer_create(GRect(10, 114, bounds.size.w, 20));
-		s_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_MONACO_16));
-	#endif
-		
-	//Customize the layout and add to Window's root layer
+	//Use platform specific background image
+	s_bitmap = gbitmap_create_with_resource(
+		PBL_IF_BW_ELSE(RESOURCE_ID_IMAGE_BACKGROUND_BW, RESOURCE_ID_IMAGE_BACKGROUND_COLOR));
+	s_bitmap_layer = bitmap_layer_create(GRect(0, 0, 144, 168)); //size of image
+	bitmap_layer_set_compositing_mode(s_bitmap_layer, GCompOpSet);
+	bitmap_layer_set_bitmap(s_bitmap_layer, s_bitmap);
 	window_set_background_color(s_main_window, GColorBlack);
+	layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_bitmap_layer));
+	
+	//Add custom font
+	s_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_MONACO_14));	
+		
+	//Time layer
+	s_time_layer = text_layer_create(GRect(5, 30, bounds.size.w, 40));
+	text_layer_set_background_color(s_time_layer, GColorClear);
+	text_layer_set_text_color(s_time_layer, GColorWhite);
+	text_layer_set_font(s_time_layer, s_font);
+	layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
 	
 	//Battery layer
-	text_layer_set_background_color(s_battery_layer, GColorBlack);
+	s_battery_layer = text_layer_create(GRect(5, 70, bounds.size.w, 50));
+	text_layer_set_background_color(s_battery_layer, GColorClear);
 	text_layer_set_text_color(s_battery_layer, GColorWhite);
 	text_layer_set_font(s_battery_layer, s_font);
 	layer_add_child(window_layer, text_layer_get_layer(s_battery_layer));
 	
 	//Connection layer
-	text_layer_set_background_color(s_connection_layer, GColorBlack);
+	s_connection_layer = text_layer_create(GRect(5, 100, bounds.size.w, 20));
+	text_layer_set_background_color(s_connection_layer, GColorClear);
 	text_layer_set_text_color(s_connection_layer, GColorWhite);
 	text_layer_set_font(s_connection_layer, s_font);
 	handle_bluetooth(connection_service_peek_pebble_app_connection());
 	layer_add_child(window_layer, text_layer_get_layer(s_connection_layer));
-	
-	//Time layer
-	text_layer_set_background_color(s_time_layer, GColorBlack);
-	text_layer_set_text_color(s_time_layer, GColorWhite);
-	text_layer_set_font(s_time_layer, s_font);
-	layer_add_child(window_layer, text_layer_get_layer(s_time_layer));
 }
 
 static void main_window_unload(Window *window) {
@@ -95,6 +97,8 @@ static void main_window_unload(Window *window) {
 	text_layer_destroy(s_battery_layer);
 	text_layer_destroy(s_connection_layer);
 	text_layer_destroy(s_time_layer);
+	gbitmap_destroy(s_bitmap);
+	bitmap_layer_destroy(s_bitmap_layer);
 }
 
 static void init() {

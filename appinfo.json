@@ -10,12 +10,20 @@
     "resources": {
         "media": [
             {
-                "file": "fonts/Monaco.ttf",
-                "name": "FONT_MONACO_16",
+                "file": "images/terminal_rect.png",
+                "name": "IMAGE_BACKGROUND_COLOR",
                 "targetPlatforms": [
-                    "chalk"
+                    "basalt"
                 ],
-                "type": "font"
+                "type": "bitmap"
+            },
+            {
+                "file": "images/terminal_rect.png",
+                "name": "IMAGE_BACKGROUND_BW",
+                "targetPlatforms": [
+                    "aplite"
+                ],
+                "type": "bitmap"
             },
             {
                 "file": "fonts/Monaco.ttf",
@@ -32,8 +40,7 @@
     "shortName": "Geek Chic",
     "targetPlatforms": [
         "aplite",
-        "basalt",
-        "chalk"
+        "basalt"
     ],
     "uuid": "74c68c43-1a3d-40b8-9a1f-3acc4824e63a",
     "versionLabel": "1.0",
