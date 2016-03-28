@@ -10,6 +10,22 @@
     "resources": {
         "media": [
             {
+                "file": "images/static-cursor.png",
+                "name": "STATIC_CURSOR",
+                "targetPlatforms": [
+                    "aplite"
+                ],
+                "type": "bitmap"
+            },
+            {
+                "file": "data/blinking-cursor.png",
+                "name": "BLINKING_CURSOR",
+                "targetPlatforms": [
+                    "basalt"
+                ],
+                "type": "raw"
+            },
+            {
                 "file": "images/terminal_rect.png",
                 "name": "IMAGE_BACKGROUND_COLOR",
                 "targetPlatforms": [

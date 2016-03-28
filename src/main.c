@@ -5,8 +5,12 @@ static GFont s_font;
 static TextLayer *s_time_layer;
 static TextLayer *s_battery_layer;
 static TextLayer *s_connection_layer;
+static TextLayer *s_text_layer;
 static GBitmap *s_bitmap;
 static BitmapLayer *s_bitmap_layer;
+static GBitmapSequence *s_sequence;
+static GBitmap *s_bitmap_cursor;
+static BitmapLayer *s_bitmap_cursor_layer;
 
 /***Handle Battery***/
 static void handle_battery(BatteryChargeState charge_state) {
@@ -50,6 +54,21 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 	update_time();
 }
 
+/***Animation***/
+static void timer_handler(void *context) {
+  uint32_t next_delay;
+
+  // Advance to the next APNG frame, and get the delay for this frame
+  if(gbitmap_sequence_update_bitmap_next_frame(s_sequence, s_bitmap_cursor, &next_delay)) {
+    // Set the new frame into the BitmapLayer
+    bitmap_layer_set_bitmap(s_bitmap_cursor_layer, s_bitmap_cursor);
+    layer_mark_dirty(bitmap_layer_get_layer(s_bitmap_cursor_layer));
+
+    // Timer for that frame's delay
+    app_timer_register(next_delay, timer_handler, NULL);
+  }
+}
+
 /***Handle Window***/
 static void main_window_load(Window *window) {
 	//Get information about the window
@@ -63,7 +82,7 @@ static void main_window_load(Window *window) {
 	bitmap_layer_set_compositing_mode(s_bitmap_layer, GCompOpSet);
 	bitmap_layer_set_bitmap(s_bitmap_layer, s_bitmap);
 	window_set_background_color(s_main_window, GColorBlack);
-	layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_bitmap_layer));
+	layer_add_child(window_layer, bitmap_layer_get_layer(s_bitmap_layer));
 	
 	//Add custom font
 	s_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_MONACO_14));	
@@ -89,6 +108,33 @@ static void main_window_load(Window *window) {
 	text_layer_set_font(s_connection_layer, s_font);
 	handle_bluetooth(connection_service_peek_pebble_app_connection());
 	layer_add_child(window_layer, text_layer_get_layer(s_connection_layer));
+	
+	//Other text layer
+	s_text_layer = text_layer_create(GRect(5, 125, bounds.size.w, 20));
+	text_layer_set_background_color(s_text_layer, GColorClear);
+	text_layer_set_text_color(s_text_layer, GColorWhite);
+	text_layer_set_font(s_text_layer, s_font);
+	text_layer_set_text(s_text_layer, "root@PC:/$");
+	layer_add_child(window_layer, text_layer_get_layer(s_text_layer));
+	
+	
+	#if defined (PBL_BW)
+	//Stationary cursor
+	s_bitmap_cursor = gbitmap_create_with_resource(RESOURCE_ID_STATIC_CURSOR);
+	#elif defined (PBL_COLOR)
+	//Blinking cursor
+	s_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_BLINKING_CURSOR);
+	GSize frame_size = gbitmap_sequence_get_bitmap_size(s_sequence);
+	s_bitmap_cursor = gbitmap_create_blank(frame_size, GBitmapFormat8Bit);
+	//Start the animation
+	uint32_t first_delay_ms = 1000;
+	app_timer_register(first_delay_ms, timer_handler, NULL);
+	#endif
+	
+	s_bitmap_cursor_layer = bitmap_layer_create(GRect(90, 125, 10, 15));
+	bitmap_layer_set_compositing_mode(s_bitmap_cursor_layer, GCompOpSet);
+	bitmap_layer_set_bitmap(s_bitmap_cursor_layer, s_bitmap_cursor);
+	layer_add_child(window_layer, bitmap_layer_get_layer(s_bitmap_cursor_layer));
 }
 
 static void main_window_unload(Window *window) {
@@ -99,6 +145,9 @@ static void main_window_unload(Window *window) {
 	text_layer_destroy(s_time_layer);
 	gbitmap_destroy(s_bitmap);
 	bitmap_layer_destroy(s_bitmap_layer);
+	gbitmap_destroy(s_bitmap_cursor);
+	bitmap_layer_destroy(s_bitmap_cursor_layer);
+	gbitmap_sequence_destroy(s_sequence);
 }
 
 static void init() {
