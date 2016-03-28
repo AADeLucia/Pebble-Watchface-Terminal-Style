@@ -41,7 +41,7 @@ static void update_time() {
 	//Write current hours and minutes into a buffer
 	//Desired style: "Thu Mar 24 01:46"
 	static char time_text[] = "day mon dd hh:mm EST YYYY";
-	strftime(time_text, sizeof(time_text), clock_is_24h_style() ?
+	strftime(time_text, sizeof(time_text), clock_is_24h_style() ? 
 					 "%a %b %e %R" : "%a %b %e %I:%M", tick_time);
 	
 	//Display time on the TextLayer
@@ -55,6 +55,7 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 }
 
 /***Animation***/
+#if defined (PBL_COLOR)
 static void timer_handler(void *context) {
   uint32_t next_delay;
 
@@ -68,6 +69,7 @@ static void timer_handler(void *context) {
     app_timer_register(next_delay, timer_handler, NULL);
   }
 }
+#endif
 
 /***Handle Window***/
 static void main_window_load(Window *window) {
@@ -117,12 +119,12 @@ static void main_window_load(Window *window) {
 	text_layer_set_text(s_text_layer, "root@PC:/$");
 	layer_add_child(window_layer, text_layer_get_layer(s_text_layer));
 	
-	
+	//Platform-specific cursor animation
+	//Stationary cursor for Aplite
 	#if defined (PBL_BW)
-	//Stationary cursor
 	s_bitmap_cursor = gbitmap_create_with_resource(RESOURCE_ID_STATIC_CURSOR);
+	//Blinking cursor for Basalt
 	#elif defined (PBL_COLOR)
-	//Blinking cursor
 	s_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_BLINKING_CURSOR);
 	GSize frame_size = gbitmap_sequence_get_bitmap_size(s_sequence);
 	s_bitmap_cursor = gbitmap_create_blank(frame_size, GBitmapFormat8Bit);
