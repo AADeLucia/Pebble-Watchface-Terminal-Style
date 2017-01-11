@@ -1,5 +1,7 @@
 #include <pebble.h>
 
+/*tester comment*/
+
 static Window *s_main_window;
 static GFont s_font;
 static TextLayer *s_time_layer;

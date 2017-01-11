@@ -6,9 +6,12 @@
     "keywords": [],
     "name": "geek-chic",
     "pebble": {
+        "capabilities": [
+            "configurable"
+        ],
         "displayName": "Geek Chic Watchface",
         "enableMultiJS": true,
-        "messageKeys": {},
+        "messageKeys": [],
         "projectType": "native",
         "resources": {
             "media": [
