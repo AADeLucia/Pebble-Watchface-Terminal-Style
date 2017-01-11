@@ -1,0 +1,69 @@
+{
+    "author": "alexir563@aol.com",
+    "dependencies": {
+        "pebble-clay": "^1.0.3"
+    },
+    "keywords": [],
+    "name": "geek-chic",
+    "pebble": {
+        "displayName": "Geek Chic Watchface",
+        "enableMultiJS": true,
+        "messageKeys": {},
+        "projectType": "native",
+        "resources": {
+            "media": [
+                {
+                    "file": "images/terminal_rect.png",
+                    "name": "IMAGE_BACKGROUND_BW",
+                    "targetPlatforms": [
+                        "aplite"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/terminal_rect.png",
+                    "name": "IMAGE_BACKGROUND_COLOR",
+                    "targetPlatforms": [
+                        "basalt"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/static-cursor.png",
+                    "name": "STATIC_CURSOR",
+                    "targetPlatforms": [
+                        "aplite"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "fonts/Monaco.ttf",
+                    "name": "FONT_MONACO_14",
+                    "targetPlatforms": [
+                        "aplite",
+                        "basalt"
+                    ],
+                    "type": "font"
+                },
+                {
+                    "file": "data/blinking-cursor.png",
+                    "name": "BLINKING_CURSOR",
+                    "targetPlatforms": [
+                        "basalt"
+                    ],
+                    "type": "raw"
+                }
+            ]
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "aplite",
+            "basalt"
+        ],
+        "uuid": "74c68c43-1a3d-40b8-9a1f-3acc4824e63a",
+        "watchapp": {
+            "watchface": true
+        }
+    },
+    "version": "1.0.0"
+}
