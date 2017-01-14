@@ -6,7 +6,6 @@
 // Define our settings struct
 typedef struct ClaySettings {
   bool isAnimated;
-	bool isMilitaryTime;
 	bool useVibrate;
 }__attribute__((__packed__)) ClaySettings;
 

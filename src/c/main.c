@@ -15,7 +15,6 @@ static ClaySettings settings;
 //Set default settings
 static void default_settings() {
 	settings.isAnimated = true;
-	settings.isMilitaryTime = false;
 	settings.useVibrate = true;
 }
 
@@ -45,11 +44,7 @@ static void inbox_received_handler(DictionaryIterator *iter, void *context) {
   if(animations_t) {
     settings.isAnimated = animations_t->value->int32 == 1;
   }
-	Tuple *timeDisplay_t = dict_find(iter, MESSAGE_KEY_TimeDisplay);
-  if(timeDisplay_t) {
-    settings.isMilitaryTime = timeDisplay_t->value->int32 == 1;
-  }
-	Tuple *vibrate_t = dict_find(iter, MESSAGE_KEY_TimeDisplay);
+	 Tuple *vibrate_t = dict_find(iter, MESSAGE_KEY_Vibration);
   if(vibrate_t) {
     settings.useVibrate = vibrate_t->value->int32 == 1;
   }
@@ -71,9 +66,6 @@ static void update_display(){
 	else {
 		s_bitmap_cursor = gbitmap_create_with_resource(RESOURCE_ID_STATIC_CURSOR);
 	}
-	
-	//Update time to reflect custom config
-	update_time();
 }
 
 /***Handle Battery***/
@@ -107,12 +99,7 @@ static void update_time() {
 	//Write current hours and minutes into a buffer
 	//Desired style: "Thu Mar 24 01:46"
 	static char time_text[] = "day mon dd hh:mm EST YYYY";
-	if(settings.isMilitaryTime){
-		strftime(time_text, sizeof(time_text), "%a %b %e %I:%M", tick_time);
-	}
-	else {
-		strftime(time_text, sizeof(time_text), "%a %b %e %R", tick_time);
-	}
+	strftime(time_text, sizeof(time_text), clock_is_24h_style() ? "%a %b %e %R" : "%a %b %e %I:%M", tick_time);
 	
 	//Display time on the TextLayer
 	static char s_buffer[50];
@@ -155,7 +142,7 @@ static void main_window_load(Window *window) {
 	
 	//Add custom font
 	s_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_MONACO_14));	
-		
+	
 	//Time layer
 	s_time_layer = text_layer_create(GRect(5, 30, bounds.size.w, 40));
 	text_layer_set_background_color(s_time_layer, GColorClear);

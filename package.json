@@ -13,7 +13,6 @@
         "enableMultiJS": true,
         "messageKeys": [
             "Animation",
-            "TimeDisplay",
             "Vibration"
         ],
         "projectType": "native",
@@ -23,8 +22,7 @@
                     "file": "images/terminal_rect.png",
                     "name": "IMAGE_BACKGROUND_COLOR",
                     "targetPlatforms": [
-                        "basalt",
-                        "chalk"
+                        "basalt"
                     ],
                     "type": "bitmap"
                 },
@@ -41,8 +39,7 @@
                     "name": "STATIC_CURSOR",
                     "targetPlatforms": [
                         "aplite",
-                        "basalt",
-                        "chalk"
+                        "basalt"
                     ],
                     "type": "bitmap"
                 },
@@ -50,23 +47,23 @@
                     "file": "fonts/Monaco.ttf",
                     "name": "FONT_MONACO_14",
                     "targetPlatforms": [
-                        "basalt",
-                        "chalk"
+                        "basalt"
                     ],
                     "type": "font"
                 },
                 {
                     "file": "data/blinking-cursor.png",
                     "name": "BLINKING_CURSOR",
-                    "targetPlatforms": null,
+                    "targetPlatforms": [
+                        "basalt"
+                    ],
                     "type": "raw"
                 }
             ]
         },
         "sdkVersion": "3",
         "targetPlatforms": [
-            "basalt",
-            "chalk"
+            "basalt"
         ],
         "uuid": "74c68c43-1a3d-40b8-9a1f-3acc4824e63a",
         "watchapp": {
