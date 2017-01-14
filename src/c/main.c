@@ -1,18 +1,80 @@
 #include <pebble.h>
-
-/*tester comment*/
+#include "main.h"
 
 static Window *s_main_window;
 static GFont s_font;
-static TextLayer *s_time_layer;
-static TextLayer *s_battery_layer;
-static TextLayer *s_connection_layer;
-static TextLayer *s_text_layer;
-static GBitmap *s_bitmap;
-static BitmapLayer *s_bitmap_layer;
+static TextLayer *s_time_layer, *s_battery_layer, *s_connection_layer, *s_text_layer;
+static BitmapLayer *s_bitmap_layer, *s_bitmap_cursor_layer;
+static GBitmap *s_bitmap, *s_bitmap_cursor;
 static GBitmapSequence *s_sequence;
-static GBitmap *s_bitmap_cursor;
-static BitmapLayer *s_bitmap_cursor_layer;
+
+/***App Message Stuff***/
+//An instance of the struct
+static ClaySettings settings;
+
+//Set default settings
+static void default_settings() {
+	settings.isAnimated = true;
+	settings.isMilitaryTime = false;
+	settings.useVibrate = true;
+}
+
+//Read settings from persistent storage
+static void load_settings() {
+	//load default settings
+	default_settings();
+	
+	//Read settings from persistent storage
+	persist_read_data(SETTINGS_KEY, &settings, sizeof(settings));
+}
+
+// Save the settings to persistent storage
+static void save_settings() {
+	//Read settings from persistent storage
+  persist_write_data(SETTINGS_KEY, &settings, sizeof(settings));
+	
+	//Update settings
+	update_display();
+}
+
+// AppMessage receive handler
+static void inbox_received_handler(DictionaryIterator *iter, void *context) {
+  // Read boolean preferences
+	// Assign the values to the struct
+  Tuple *animations_t = dict_find(iter, MESSAGE_KEY_Animation);
+  if(animations_t) {
+    settings.isAnimated = animations_t->value->int32 == 1;
+  }
+	Tuple *timeDisplay_t = dict_find(iter, MESSAGE_KEY_TimeDisplay);
+  if(timeDisplay_t) {
+    settings.isMilitaryTime = timeDisplay_t->value->int32 == 1;
+  }
+	Tuple *vibrate_t = dict_find(iter, MESSAGE_KEY_TimeDisplay);
+  if(vibrate_t) {
+    settings.useVibrate = vibrate_t->value->int32 == 1;
+  }
+	
+	save_settings();
+}
+
+//Reflect custom configuration on display
+static void update_display(){
+	if(settings.isAnimated){
+		s_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_BLINKING_CURSOR);
+		GSize frame_size = gbitmap_sequence_get_bitmap_size(s_sequence);
+		s_bitmap_cursor = gbitmap_create_blank(frame_size, GBitmapFormat8Bit);
+		//Start the animation
+		uint32_t first_delay_ms = 1000;
+		app_timer_register(first_delay_ms, timer_handler, NULL);
+	}
+	//Use static cursor image if not animated
+	else {
+		s_bitmap_cursor = gbitmap_create_with_resource(RESOURCE_ID_STATIC_CURSOR);
+	}
+	
+	//Update time to reflect custom config
+	update_time();
+}
 
 /***Handle Battery***/
 static void handle_battery(BatteryChargeState charge_state) {
@@ -32,6 +94,8 @@ static void handle_battery(BatteryChargeState charge_state) {
 /***Handle Connection***/
 static void handle_bluetooth(bool connected) {
 	text_layer_set_text(s_connection_layer, connected ? "connected: yes" : "connected: no");
+	if(settings.useVibrate && !connected)
+		vibes_short_pulse();
 }
 
 /***Handle Time***/
@@ -43,8 +107,12 @@ static void update_time() {
 	//Write current hours and minutes into a buffer
 	//Desired style: "Thu Mar 24 01:46"
 	static char time_text[] = "day mon dd hh:mm EST YYYY";
-	strftime(time_text, sizeof(time_text), clock_is_24h_style() ? 
-					 "%a %b %e %R" : "%a %b %e %I:%M", tick_time);
+	if(settings.isMilitaryTime){
+		strftime(time_text, sizeof(time_text), "%a %b %e %I:%M", tick_time);
+	}
+	else {
+		strftime(time_text, sizeof(time_text), "%a %b %e %R", tick_time);
+	}
 	
 	//Display time on the TextLayer
 	static char s_buffer[50];
@@ -57,7 +125,6 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 }
 
 /***Animation***/
-#if defined (PBL_COLOR)
 static void timer_handler(void *context) {
   uint32_t next_delay;
 
@@ -71,7 +138,6 @@ static void timer_handler(void *context) {
     app_timer_register(next_delay, timer_handler, NULL);
   }
 }
-#endif
 
 /***Handle Window***/
 static void main_window_load(Window *window) {
@@ -79,9 +145,8 @@ static void main_window_load(Window *window) {
 	Layer *window_layer = window_get_root_layer(window);
 	GRect bounds = layer_get_bounds(window_layer);
 	
-	//Use platform specific background image
-	s_bitmap = gbitmap_create_with_resource(
-		PBL_IF_BW_ELSE(RESOURCE_ID_IMAGE_BACKGROUND_BW, RESOURCE_ID_IMAGE_BACKGROUND_COLOR));
+	//Background image
+	s_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BACKGROUND_COLOR);
 	s_bitmap_layer = bitmap_layer_create(GRect(0, 0, 144, 168)); //size of image
 	bitmap_layer_set_compositing_mode(s_bitmap_layer, GCompOpSet);
 	bitmap_layer_set_bitmap(s_bitmap_layer, s_bitmap);
@@ -121,19 +186,8 @@ static void main_window_load(Window *window) {
 	text_layer_set_text(s_text_layer, "root@PC:/$");
 	layer_add_child(window_layer, text_layer_get_layer(s_text_layer));
 	
-	//Platform-specific cursor animation
-	//Stationary cursor for Aplite
-	#if defined (PBL_BW)
-	s_bitmap_cursor = gbitmap_create_with_resource(RESOURCE_ID_STATIC_CURSOR);
-	//Blinking cursor for Basalt
-	#elif defined (PBL_COLOR)
-	s_sequence = gbitmap_sequence_create_with_resource(RESOURCE_ID_BLINKING_CURSOR);
-	GSize frame_size = gbitmap_sequence_get_bitmap_size(s_sequence);
-	s_bitmap_cursor = gbitmap_create_blank(frame_size, GBitmapFormat8Bit);
-	//Start the animation
-	uint32_t first_delay_ms = 1000;
-	app_timer_register(first_delay_ms, timer_handler, NULL);
-	#endif
+	//Use custom cursor animation settings for Basalt
+	update_display();
 	
 	s_bitmap_cursor_layer = bitmap_layer_create(GRect(90, 125, 10, 15));
 	bitmap_layer_set_compositing_mode(s_bitmap_cursor_layer, GCompOpSet);
@@ -155,6 +209,12 @@ static void main_window_unload(Window *window) {
 }
 
 static void init() {
+	load_settings();
+	
+	//Listen for AppMessage connection
+  app_message_register_inbox_received(inbox_received_handler);
+  app_message_open(128, 128);
+	
 	//Create main window
 	s_main_window = window_create();
 	
